@@ -50,7 +50,7 @@ public class recuperador {
             byte b[] = new byte[1000];
             int numRead = urlRobotStream.read(b);
             if(numRead != -1)
-            strCommands = new String(b, 0, numRead);
+                strCommands = new String(b, 0, numRead);
             while (numRead != -1) {
                 numRead = urlRobotStream.read(b);
                 if (numRead != -1) {
@@ -93,6 +93,7 @@ public class recuperador {
         String dest ="sites/";
         if(urlPrapast.length>2) {
             dest += urlPrapast[2];
+            Boolean urlValid= getUrlValid(URL);
             String nomeArq = getNomeArquivo(urlPrapast, "");
             Boolean fileExists = new File(dest.toString() + "/" + nomeArq).exists();
             if (!fileExists && !links.contains(URL) && count < limite) {
@@ -127,6 +128,23 @@ public class recuperador {
 
     }
 
+    private Boolean getUrlValid(String url) {
+        HashSet<String> ex=new HashSet<>();
+        ex.add("zip");
+        ex.add("jar");
+        ex.add("gz");
+        ex.add("pdf");
+        ex.add("doc");
+        ex.add("rar");
+        ex.add("txt");
+        url=url.substring(url.length()-3,url.length());
+        url=url.replaceAll("[^a-zA-Z]","");
+        for(int i=0;i<ex.size();i++){
+            return !url.equals(ex);
+        }
+        return true;
+    }
+
     private String getNomeArquivo(String[] urlPrapast, String nomeArq) {
         boolean nofound=true;
         if(urlPrapast.length>3){
@@ -134,7 +152,7 @@ public class recuperador {
                 for(int i=3;i<urlPrapast.length;i++){
                     nofound=!urlPrapast[i].equals("?");
                     if (nofound&&!urlPrapast.equals("")&&(nomeArq.length()+urlPrapast[i].length())<100)
-                    nomeArq+=urlPrapast[i].replaceAll("[^a-zA-Z0-9]"," ");
+                        nomeArq+=urlPrapast[i].replaceAll("[^a-zA-Z0-9]"," ");
                 }
                 nomeArq+=".zip";
             }else{
@@ -164,12 +182,12 @@ public class recuperador {
     private void fillAlfabeto(String data) {
         String[] f=data.split(" ");
         for(int i=0;i<f.length;i++)
-        if(!this.alfabeto.contains(f[i])&&f[i].length()>1){
-            this.alfabeto.add(f[i]);
-            this.frequencia.put(f[i],1);
-        }else if(f[i].length()>1){
-            this.frequencia.put(f[i],this.frequencia.get(f[i])+1);
-        }
+            if(!this.alfabeto.contains(f[i])&&f[i].length()>1){
+                this.alfabeto.add(f[i]);
+                this.frequencia.put(f[i],1);
+            }else if(f[i].length()>1){
+                this.frequencia.put(f[i],this.frequencia.get(f[i])+1);
+            }
     }
 
     public static void main(String[] args) {
