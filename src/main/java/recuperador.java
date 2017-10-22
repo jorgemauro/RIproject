@@ -96,24 +96,26 @@ public class recuperador {
             Boolean urlValid= getUrlValid(URL);
             String nomeArq = getNomeArquivo(urlPrapast, "");
             Boolean fileExists = new File(dest.toString() + "/" + nomeArq).exists();
-            if (!fileExists && !links.contains(URL) && count < limite) {
+            if (urlValid && !links.contains(URL) && count < limite) {
                 try {
                     if (this.robotSafe(new URL(URL))) {
-
                         links.add(URL);
-                        System.out.println(this.count);
+                        if(this.count%10==0){
+                            System.out.println(this.count);
+                        }
                         this.count++;
                         document = Jsoup.connect(URL).get();
-
-                        data = Jsoup.parse(document.html()).text();
                         linksOnPage = document.select("a[href]");
-                        data = data.replaceAll("[^a-zA-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]", " ");
-                        data = data.toLowerCase();
-                        this.json.put(URL, data);
-                        Boolean d = new File(dest.toString()).mkdirs();
-                        FileOutputStream outputStream = new FileOutputStream(dest + "/" + nomeArq);
-                        GZIPOutputStream g = new GZIPOutputStream(outputStream);
-                        g.write(data.getBytes());
+                        if(!fileExists){
+                            data = Jsoup.parse(document.html()).text();
+                            data = data.replaceAll("[^a-zA-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]", " ");
+                            data = data.toLowerCase();
+                            this.json.put(URL, data);
+                            Boolean d = new File(dest.toString()).mkdirs();
+                            FileOutputStream outputStream = new FileOutputStream(dest + "/" + nomeArq);
+                            GZIPOutputStream g = new GZIPOutputStream(outputStream);
+                            g.write(data.getBytes());
+                        }
                         for (Element page : linksOnPage) {
                             pegalinkpag(page.attr("abs:href"));
                         }
@@ -137,10 +139,22 @@ public class recuperador {
         ex.add("doc");
         ex.add("rar");
         ex.add("txt");
+        ex.add("ogg");
+        ex.add("svg");
+        ex.add("jpg");
+        ex.add("png");
+        ex.add("mp4");
+        ex.add("wma");
+        ex.add("mp3");
+        if(this.count>105){
+            int d=0;
+        }
         url=url.substring(url.length()-3,url.length());
-        url=url.replaceAll("[^a-zA-Z]","");
+        url=url.replaceAll("[^a-zA-Z]","").toLowerCase();
         for(int i=0;i<ex.size();i++){
-            return !url.equals(ex);
+            if(ex.contains(url)){
+                return false;
+            }
         }
         return true;
     }
@@ -189,18 +203,36 @@ public class recuperador {
                 this.frequencia.put(f[i],this.frequencia.get(f[i])+1);
             }
     }
+    public static void escreveFimArquivo(String arq, String escrita){
 
-    public static void main(String[] args) {
-        long tempoInicio = System.currentTimeMillis();
-        int limite=2;
-        String url="https://www.alura.com.br/";
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Digite o limite de paginas");
+        FileWriter writeFile = null;
+        String newLine = System.getProperty("line.separator");
         try {
-            limite=Integer.parseInt(br.readLine());
+            writeFile = new FileWriter(arq,true);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        try {
+            writeFile.append(escrita+newLine);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            writeFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        long tempoInicio = System.currentTimeMillis();
+        int limite=150;
+        String url1="https://pt.wikipedia.org/";
+        String url2="https://www.alura.com.br/";
+        String url3="http://www.globo.com/";
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
         System.out.println("digite a url");
         /*try {
             url=br.readLine();
@@ -208,7 +240,63 @@ public class recuperador {
             e.printStackTrace();
         }*/
         recuperador R = new recuperador(limite);
-        R.pegalinkpag(url);
+        escreveFimArquivo("coletor.csv","url,1,2,3,4,5,6,7,8,9,10");
+        String coleta= url1+",";
+        for(int i=0;i<10;i++) {
+            System.out.println("Digite o limite de paginas");
+       try {
+            R.limite=Integer.parseInt(br.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+            tempoInicio = System.currentTimeMillis();
+            R.pegalinkpag(url1);
+            R.count=0;
+            if(i!=9){
+                coleta+=(System.currentTimeMillis()-tempoInicio)+",";
+            }else{
+                coleta+=(System.currentTimeMillis()-tempoInicio)+"";
+            }
+        }
+        escreveFimArquivo("coletor.csv",coleta);
+
+        coleta= url2+",";
+        for(int i=0;i<10;i++) {
+            System.out.println("Digite o limite de paginas");
+        try {
+            R.limite=Integer.parseInt(br.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+            tempoInicio = System.currentTimeMillis();
+            R.pegalinkpag(url2);
+            R.count=0;
+            if(i!=9){
+                coleta+=(System.currentTimeMillis()-tempoInicio)+",";
+            }else{
+                coleta+=(System.currentTimeMillis()-tempoInicio)+"";
+            }
+        }
+        escreveFimArquivo("coletor.csv",coleta);
+
+        coleta= url3+",";
+        for(int i=0;i<10;i++) {
+            System.out.println("Digite o limite de paginas");
+       try {
+           R.limite=Integer.parseInt(br.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+            tempoInicio = System.currentTimeMillis();
+            R.pegalinkpag(url3);
+            R.count=0;
+            if(i!=9){
+                coleta+=((System.currentTimeMillis()-tempoInicio)/1000)+",";
+            }else{
+                coleta+=((System.currentTimeMillis()-tempoInicio)/1000)+"";
+            }
+        }
+        escreveFimArquivo("coletor.csv",coleta);
         FileWriter writeFile = null;
         try{
             writeFile = new FileWriter("saida.json");
