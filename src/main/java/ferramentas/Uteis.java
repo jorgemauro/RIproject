@@ -1,15 +1,15 @@
 package ferramentas;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.StringTokenizer;
-public class uteis {
-    public static final boolean DEBUG = false;
-    public static final String DISALLOW = "Disallow:";
+import java.util.zip.GZIPOutputStream;
+
+public class Uteis {
+    private static final boolean DEBUG = false;
+    private static final String DISALLOW = "Disallow:";
 
     public static boolean robotSafe(URL url) {
         String strHost = url.getHost();
@@ -23,18 +23,18 @@ public class uteis {
 
         if (DEBUG) System.out.println("Checking robot protocol " +
                 urlRobot.toString());
-        String strCommands="";
+        StringBuilder strCommands= new StringBuilder();
         try {
             InputStream urlRobotStream = urlRobot.openStream();
             byte b[] = new byte[1000];
             int numRead = urlRobotStream.read(b);
             if(numRead != -1)
-                strCommands = new String(b, 0, numRead);
+                strCommands = new StringBuilder(new String(b, 0, numRead));
             while (numRead != -1) {
                 numRead = urlRobotStream.read(b);
                 if (numRead != -1) {
                     String newCommands = new String(b, 0, numRead);
-                    strCommands += newCommands;
+                    strCommands.append(newCommands);
                 }
             }
             urlRobotStream.close();
@@ -88,7 +88,8 @@ public class uteis {
         return true;
     }
     public static String getNomeArquivo(String[] urlPrapast, String nomeArq) {
-        boolean nofound=true;
+        boolean nofound;
+        nofound = true;
         if(urlPrapast.length>3){
             if(!urlPrapast[3].equals("")){
                 for(int i=3;i<urlPrapast.length;i++){
@@ -131,5 +132,16 @@ public class uteis {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void GravaArquivo(String data, String dest, String nomeArq) throws IOException {
+        Boolean d = new File(dest.toString()).mkdirs();
+        FileOutputStream outputStream = new FileOutputStream(dest + "/" + nomeArq);
+        GZIPOutputStream g = new GZIPOutputStream(outputStream);
+        g.write(data.getBytes());
+        g.close();
+    }
+    public static void printaTempo(long inicio , String nomeTest){
+        System.out.println(nomeTest+"-> Tempo Total: "+(System.currentTimeMillis()-inicio));
     }
 }

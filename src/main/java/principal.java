@@ -1,37 +1,26 @@
 
-import org.json.simple.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import java.io.FileWriter;
-import java.util.*;
-import java.net.*;
-import java.io.*;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.zip.*;
+import buscador.Coletor;
+import buscador.Indexador;
 
-import static ferramentas.uteis.getNomeArquivo;
-import static ferramentas.uteis.getUrlValid;
-import static ferramentas.uteis.robotSafe;
+import java.io.*;
 
 public class principal {
 
     public static void main(String[] args) {
         long tempoInicio = System.currentTimeMillis();
         int limite=150;
-        String url1="https://pt.wikipedia.org/";
+        String url1="https://en.wikipedia.org/wiki/Main_Page";
         String url2="https://www.alura.com.br/";
         String url3="http://www.globo.com/";
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-        System.out.println("digite a url");
-        /*try {
-            url=br.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+        Coletor C= new Coletor(100);
+        Indexador I = new Indexador();
+        C.pegalinkpag(url1);
+        C.setCount(0);
+        C.pegalinkpag(url2);
+        C.setCount(0);
+        C.pegalinkpag(url3);
+        I.lerArquivosColetados();
+        System.out.println("só pra debugar");
 
 
     }

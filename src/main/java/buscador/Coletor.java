@@ -1,4 +1,4 @@
-package Buscador;
+package buscador;
 
 import org.json.simple.JSONObject;
 import org.jsoup.Jsoup;
@@ -13,18 +13,25 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.zip.GZIPOutputStream;
 
-import static ferramentas.uteis.getNomeArquivo;
-import static ferramentas.uteis.getUrlValid;
-import static ferramentas.uteis.robotSafe;
+import static ferramentas.Uteis.*;
 
-public class coletor {
+public class Coletor {
     private HashSet<String> links;
     public JSONObject json;
     public HashSet<String> robots;
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
     private int count=0;
     private int limite;
 
-    public coletor(int limite) {
+    public Coletor(int limite) {
         this.links = new HashSet<>();
         this.json= new JSONObject();
         this.limite=limite;
@@ -48,7 +55,7 @@ public class coletor {
                         if(this.count%10==0){
                             System.out.println(this.count);
                         }
-                        document = Jsoup.connect(URL).get();
+                        document = Jsoup.connect(URL).userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36").get();
                         linksOnPage = document.select("a[href]");
                         if(!fileExists){
                             this.count++;
@@ -56,11 +63,7 @@ public class coletor {
                             data = data.replaceAll("[^a-zA-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]", " ");
                             data = data.toLowerCase();
                             this.json.put(URL, data);
-                            Boolean d = new File(dest.toString()).mkdirs();
-                            FileOutputStream outputStream = new FileOutputStream(dest + "/" + nomeArq);
-                            GZIPOutputStream g = new GZIPOutputStream(outputStream);
-                            g.write(data.getBytes());
-                            g.close();
+                            GravaArquivo(data, dest, nomeArq);
                         }
                         for (Element page : linksOnPage) {
                             pegalinkpag(page.attr("abs:href"));
@@ -74,4 +77,5 @@ public class coletor {
         }
 
     }
+
 }
