@@ -142,6 +142,7 @@ public class Uteis {
         g.close();
     }
     public static void printaTempo(long inicio , String nomeTest){
-        System.out.println(nomeTest+"-> Tempo Total: "+(System.currentTimeMillis()-inicio));
+        //System.out.println(nomeTest+"-> Tempo Total: "+(System.currentTimeMillis()-inicio));
+        System.out.println(inicio);
     }
 }

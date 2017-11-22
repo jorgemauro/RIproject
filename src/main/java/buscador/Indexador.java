@@ -1,11 +1,17 @@
 package buscador;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import org.json.JSONObject;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.zip.GZIPInputStream;
 
+import static ferramentas.Uteis.escreveFimArquivo;
 import static ferramentas.Uteis.printaTempo;
 
 public class Indexador {
@@ -13,6 +19,7 @@ public class Indexador {
     private HashMap<String, HashMap<String,Integer>> indexador;
     private HashSet<String> alfabeto;
     private HashMap<String,Integer> frequencia;
+    int count=0;
     public Indexador() {
         this.alfabeto= new HashSet<>();
         this.frequencia=new HashMap<>();
@@ -22,15 +29,28 @@ public class Indexador {
 
 
     private void fillIndex(String url) {
+        System.out.println(this.indexador.size());
         this.frequencia.forEach((s, integer) ->{
             if (!this.indexador.containsKey(s)) {
                 this.indexador.put(s, new HashMap<>());
             }
             this.indexador.get(s).put(url,integer);
+            if(memoriaInf()<80){
+                Gson gson = new Gson();
+                System.out.println("entrei");
+                this.indexador.forEach((k,obj) ->{
+                    JSONObject json = new JSONObject();
+                    json.put(k,obj);
+                    escreveFimArquivo("indexador.json",json.toString());
+                });
+                this.indexador=new HashMap<>();
+            }
         } );
     }
 
     private void fillAlfabeto(String data) {
+        data=data.replaceAll("<.*?>", " ");
+        data=data.replaceAll("[^a-zA-záàâãéèêíïóôõöúçÁÀÂÃÉÈÍÏÓÔÕÖÚÇ]", " ");
         String[] f=data.split(" ");
         for(int i=0;i<f.length;i++)
             if(!this.alfabeto.contains(f[i])&&f[i].length()>1){
@@ -62,9 +82,9 @@ public class Indexador {
                     }
                     long tempoInicio1 = System.currentTimeMillis();
                     this.fillAlfabeto(writer.toString());
-                    printaTempo(tempoInicio1,"Alfabeto");
-                    long tempoInicio2 = System.currentTimeMillis();
                     this.fillIndex(subPasta+"/"+arquivos[i].getName());
+                    System.out.println(this.count);
+                    this.count++;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -81,6 +101,25 @@ public class Indexador {
             }
         }
     }
+
+    private long memoriaInf() {
+        Runtime runtime = Runtime.getRuntime();
+
+        NumberFormat format = NumberFormat.getInstance();
+
+        StringBuilder sb = new StringBuilder();
+        long maxMemory = runtime.maxMemory();
+        long allocatedMemory = runtime.totalMemory();
+        long freeMemory = runtime.freeMemory();
+
+        sb.append("free memory: " + format.format(freeMemory / 1024) + "\n");
+        sb.append("allocated memory: " + format.format(allocatedMemory / 1024) + "\n");
+        sb.append("max memory: " + format.format(maxMemory / 1024) + "\n");
+        sb.append("total free memory: " + format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024) + "\n");
+        long resultado=(freeMemory + (maxMemory - allocatedMemory)) / 1024;
+        return resultado;
+    }
+
     public static String unzip(final byte[] compressed) {
         if ((compressed == null) || (compressed.length == 0)) {
             throw new IllegalArgumentException("Cannot unzip null or empty bytes");
