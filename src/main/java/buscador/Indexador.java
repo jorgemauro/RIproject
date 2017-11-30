@@ -2,42 +2,102 @@ package buscador;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import ferramentas.Uteis;
 import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import static ferramentas.Uteis.GravaArquivo;
 import static ferramentas.Uteis.escreveFimArquivo;
 import static ferramentas.Uteis.printaTempo;
 
 public class Indexador {
 
-    private HashMap<String, HashMap<String,Integer>> indexador;
+    public HashMap<String, HashMap<String, HashSet<Integer>>> getIndexador() {
+        return indexador;
+    }
+
+    public void setIndexador(HashMap<String, HashMap<String, HashSet<Integer>>> indexador) {
+        this.indexador = indexador;
+    }
+
+    public HashSet<String> getAlfabeto() {
+        return alfabeto;
+    }
+
+    public void setAlfabeto(HashSet<String> alfabeto) {
+        this.alfabeto = alfabeto;
+    }
+
+    public HashMap<String, HashMap> getFrequencia() {
+        return frequencia;
+    }
+
+    public void setFrequencia(HashMap<String, HashMap> frequencia) {
+        this.frequencia = frequencia;
+    }
+
+    public HashMap<String, Integer> getOcorrencia() {
+        return ocorrencia;
+    }
+
+    public void setOcorrencia(HashMap<String, Integer> ocorrencia) {
+        this.ocorrencia = ocorrencia;
+    }
+
+    private HashMap<String, HashMap<String,HashSet<Integer>>> indexador;
+
+    public List<String> getDocs() {
+        return docs;
+    }
+
+    public void setDocs(List<String> docs) {
+        this.docs = docs;
+    }
+
+    private List<String> docs;
+
+    public HashMap<String, Integer> getDocSize() {
+        return docSize;
+    }
+
+    public void setDocSize(HashMap<String, Integer> docSize) {
+        this.docSize = docSize;
+    }
+
+    private HashMap<String,Integer> docSize;
     private HashSet<String> alfabeto;
-    private HashMap<String,Integer> frequencia;
+    private HashMap<String,HashMap> frequencia;
+    private HashMap<String,Integer> ocorrencia;
     int count=0;
     public Indexador() {
         this.alfabeto= new HashSet<>();
         this.frequencia=new HashMap<>();
         this.indexador=new HashMap<>();
+        this.docSize=new HashMap<>();
+        this.docs= new ArrayList<>();
     }
 
 
 
     private void fillIndex(String url) {
         System.out.println(this.indexador.size());
-        this.frequencia.forEach((s, integer) ->{
+        this.frequencia.forEach((s,Integer) ->{
+            HashMap<String, HashSet<Integer>> ocorrencia = new HashMap<>();
+            ocorrencia=this.frequencia.get(s);
             if (!this.indexador.containsKey(s)) {
                 this.indexador.put(s, new HashMap<>());
             }
-            this.indexador.get(s).put(url,integer);
+            this.indexador.get(s).putAll(ocorrencia);
             if(memoriaInf()<80){
                 Gson gson = new Gson();
-                System.out.println("entrei");
                 this.indexador.forEach((k,obj) ->{
                     JSONObject json = new JSONObject();
                     json.put(k,obj);
@@ -48,17 +108,28 @@ public class Indexador {
         } );
     }
 
-    private void fillAlfabeto(String data) {
+    private void fillAlfabeto(String data, String site) {
         data=data.replaceAll("<.*?>", " ");
         data=data.replaceAll("[^a-zA-záàâãéèêíïóôõöúçÁÀÂÃÉÈÍÏÓÔÕÖÚÇ]", " ");
         String[] f=data.split(" ");
-        for(int i=0;i<f.length;i++)
-            if(!this.alfabeto.contains(f[i])&&f[i].length()>1){
+        this.docSize.put(site,f.length);
+        for(int i=0;i<f.length;i++) {
+            if (!this.alfabeto.contains(f[i])) {
                 this.alfabeto.add(f[i]);
-                this.frequencia.put(f[i],1);
-            }else if(f[i].length()>1){
-                this.frequencia.put(f[i],this.frequencia.get(f[i])+1);
+                HashMap<String, HashSet<Integer>> ocorrencia = new HashMap<>();
+                if (!ocorrencia.containsKey(f[i]))
+                    ocorrencia.put(site, new HashSet<>());
+                    ocorrencia.get(site).add(i);
+                this.frequencia.put(f[i], ocorrencia);
+            } else if (f[i].length() > 1) {
+                HashMap<String, HashSet<Integer>> ocorrencia = new HashMap<>();
+                ocorrencia = this.frequencia.get(f[i]);
+                if (!ocorrencia.containsKey(f[i]))
+                    ocorrencia.put(site, new HashSet<>());
+                ocorrencia.get(site).add(i);
+                this.frequencia.put(f[i], ocorrencia);
             }
+        }
     }
     public  void lerArquivosColetados() {
         File folder = new File("sites");
@@ -70,34 +141,38 @@ public class Indexador {
             Reader reader=null;
             StringWriter writer=null;
             for(int i=0;i<arquivos.length;i++) {
+                for(File arq: arquivos[i].listFiles())
                 try {
-                    String nomeCompleto="sites/"+subPasta+"/"+arquivos[i].getName();
-                    fileInputStream = new FileInputStream(nomeCompleto);
-                    GZIPInputStream gzipInputStream = new GZIPInputStream(fileInputStream);
-                    reader=new InputStreamReader(gzipInputStream,"UTF-8");
-                    writer=new StringWriter();
-                    char[] buffer = new char[10240];
-                    for (int length = 0; (length = reader.read(buffer)) > 0;) {
-                        writer.write(buffer, 0, length);
-                    }
-                    long tempoInicio1 = System.currentTimeMillis();
-                    this.fillAlfabeto(writer.toString());
-                    this.fillIndex(subPasta+"/"+arquivos[i].getName());
+
+                    String pasta = System.getProperty("user.home");
+                    String nomeCompleto=arquivos[i]+"/"+arq.getName();
+                    File file = new File(nomeCompleto);
+//                    GZIPInputStream gzipInputStream = new GZIPInputStream(fileInputStream);
+//                    reader=new InputStreamReader(gzipInputStream,"UTF-8");
+
+                    Document doc= Jsoup.parse(file,"UTF-8");;
+//                    char[] buffer = new char[10240];
+//                    for (int length = 0; (length = reader.read(buffer)) > 0;) {
+//                        writer.write(buffer, 0, length);
+//                    }
+                    this.docs.add(arq.getName());
+                    this.fillAlfabeto(doc.text(), arq.getName());
+                    this.fillIndex(arq.getName());
                     System.out.println(this.count);
                     this.count++;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }finally {
-                    try {
-                        writer.close();
-                        reader.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
 
+                if(this.count==251) {
+                    break;
+                }
+            }
+
+            if(this.count==251) {
+                break;
             }
         }
     }
@@ -147,5 +222,12 @@ public class Indexador {
     }
     public static boolean isZipped(final byte[] compressed) {
         return (compressed[0] == (byte) (GZIPInputStream.GZIP_MAGIC)) && (compressed[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
+    }
+    public void saveIndex(){
+        JSONObject j=new JSONObject();
+        this.indexador.forEach((s,h)->{
+            j.put(s,h);
+        });
+        Uteis.escreveFimArquivo("Indexador.json",j.toString());
     }
 }

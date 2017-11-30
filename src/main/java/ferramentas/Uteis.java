@@ -1,11 +1,20 @@
 package ferramentas;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
+import org.apache.commons.io.IOUtils;
+
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.StringTokenizer;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import org.springframework.web.util.HtmlUtils;
 
 public class Uteis {
     private static final boolean DEBUG = false;
@@ -97,18 +106,15 @@ public class Uteis {
                     if (nofound&&!urlPrapast.equals("")&&(nomeArq.length()+urlPrapast[i].length())<100)
                         nomeArq+=urlPrapast[i].replaceAll("[^a-zA-Z0-9]"," ");
                 }
-                nomeArq+=".zip";
             }else{
                 nomeArq=urlPrapast[2];
                 String[] serpador=nomeArq.split("[.]");
                 nomeArq= serpador[1];
-                nomeArq+=".zip";
             }
         }else{
             nomeArq=urlPrapast[2];
             String[] serpador=nomeArq.split("[.]");
             nomeArq= serpador[1];
-            nomeArq+=".zip";
         }
         return nomeArq;
     }
@@ -136,13 +142,65 @@ public class Uteis {
 
     public static void GravaArquivo(String data, String dest, String nomeArq) throws IOException {
         Boolean d = new File(dest.toString()).mkdirs();
-        FileOutputStream outputStream = new FileOutputStream(dest + "/" + nomeArq);
-        GZIPOutputStream g = new GZIPOutputStream(outputStream);
-        g.write(data.getBytes());
-        g.close();
+
+        FileOutputStream outputStream = new FileOutputStream(dest + "/" + nomeArq+".html");
+
+//        GZIPOutputStream g = new GZIPOutputStream(outputStream);
+//        g.write(data.getBytes());
+//        g.close();
+        outputStream.write(data.getBytes());
+        outputStream.flush();
+        outputStream.close();
     }
     public static void printaTempo(long inicio , String nomeTest){
         //System.out.println(nomeTest+"-> Tempo Total: "+(System.currentTimeMillis()-inicio));
         System.out.println(inicio);
+    }
+    public static void parse() throws IOException {
+        int count=0;
+        String Path = "sitesextract";
+        String outputPath = "sites";
+        File folder = new File(Path);
+        File[] it = folder.listFiles();
+        for (File arquivo : folder.listFiles()) {
+            String subPasta=arquivo.getName();
+            InputStream fileInputStream = null;
+            File[] arquivos = arquivo.listFiles();
+            for(File arq : arquivo.listFiles()) {
+                String nomeCompleto=Path+"/"+subPasta+"/"+arq.getName();
+                GZIPInputStream inputStream = new GZIPInputStream(
+                        new FileInputStream(nomeCompleto));
+                count++;
+                if(count ==21) {
+                    System.out.println(count);
+
+                    Scanner in = new Scanner(inputStream);
+                    String x = "";
+                    while (in.hasNext()) {
+                        x += in.nextLine();
+                    }
+                    System.out.println("teste");
+                }
+                Document doc = Jsoup.parse(IOUtils.toString(inputStream), "", Parser.xmlParser());
+                for (Element element : doc.select("doc")) {
+                    Element html = element.select("html").first();
+                    if (html != null) {
+                        html.select("img").remove();
+                        html.select("center").remove();
+                        html.select("a").remove();
+                        String text = HtmlUtils.htmlUnescape(html.toString());
+                        String[] split = element.select("docno").text().split("-");
+                        File file2 = new File(outputPath + File.separator + split[0] + File.separator + split[1]);
+                        file2.mkdirs();
+                        FileOutputStream fileOutputStream = new FileOutputStream(
+                                file2.getPath() + File.separator + split[2] + ".html");
+                        fileOutputStream.write(text.getBytes());
+                        fileOutputStream.flush();
+                        fileOutputStream.close();
+                    }
+
+                }
+            }
+        }
     }
 }

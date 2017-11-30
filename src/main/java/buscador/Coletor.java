@@ -39,12 +39,12 @@ public class Coletor {
 
     public void pegalinkpag(String URL) {
         Document document;
-        String data;
+        Document data;
         Elements linksOnPage;
         String[] urlPrapast=URL.split("/");
         String dest ="sites/";
         if(urlPrapast.length>2) {
-            dest += urlPrapast[2];
+            dest += "coletados/"+urlPrapast[2];
             Boolean urlValid= getUrlValid(URL);
             String nomeArq = getNomeArquivo(urlPrapast, "");
             Boolean fileExists = new File(dest.toString() + "/" + nomeArq).exists();
@@ -59,11 +59,8 @@ public class Coletor {
                         linksOnPage = document.select("a[href]");
                         if(!fileExists){
                             this.count++;
-                            data = Jsoup.parse(document.html()).text();
-                            data = data.replaceAll("[^a-zA-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]", " ");
-                            data = data.toLowerCase();
-                            this.json.put(URL, data);
-                            GravaArquivo(data, dest, nomeArq);
+                            data = Jsoup.parse(document.html());
+                            GravaArquivo(data.toString(), dest, this.count+nomeArq);
                         }
                         for (Element page : linksOnPage) {
                             pegalinkpag(page.attr("abs:href"));
