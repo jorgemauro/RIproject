@@ -1,8 +1,8 @@
 package buscador;
 
 import Rank.BM25;
+import buscador.indexador.Indexador;
 
-import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;

@@ -58,12 +58,14 @@ public class Coletor {
                         document = Jsoup.connect(URL).userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36").get();
                         linksOnPage = document.select("a[href]");
                         if(!fileExists){
-                            this.count++;
                             data = Jsoup.parse(document.html());
-                            GravaArquivo(data.toString(), dest, this.count+nomeArq);
+                            GravaArquivo(data.toString(), dest, nomeArq);
                         }
                         for (Element page : linksOnPage) {
-                            pegalinkpag(page.attr("abs:href"));
+                            if(!page.attr("abs:href").equals(URL)) {
+                                this.count++;
+                                pegalinkpag(page.attr("abs:href"));
+                            }
                         }
                     }
 

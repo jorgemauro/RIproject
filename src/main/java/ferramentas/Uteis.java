@@ -104,7 +104,7 @@ public class Uteis {
                 for(int i=3;i<urlPrapast.length;i++){
                     nofound=!urlPrapast[i].equals("?");
                     if (nofound&&!urlPrapast.equals("")&&(nomeArq.length()+urlPrapast[i].length())<100)
-                        nomeArq+=urlPrapast[i].replaceAll("[^a-zA-Z0-9]"," ");
+                        nomeArq+=urlPrapast[i];
                 }
             }else{
                 nomeArq=urlPrapast[2];

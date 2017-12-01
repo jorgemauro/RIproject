@@ -1,6 +1,6 @@
 package Rank;
 
-import buscador.Indexador;
+import buscador.indexador.Indexador;
 
 import java.util.*;
 
