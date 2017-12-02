@@ -9,15 +9,15 @@ public class BM25 {
     public static double K = 1d;
     public static double B = 0.5d;
 
-    // The total number of documents
+    // nuhmero total de documento
     public static int N = 500;
     public static int AVGDL = 100;
 
-    public static HashMap<String, Double> score(String[] query, Indexador I) {
+    public static LinkedHashMap<String, Double> score(String[] q, Indexador I) {
 
-        Indexador indexs 				= getIndexs(query,I);					// inverted index that only contain the tokens which are in query
-        List<String> docs 				= I.getDocs();					// all documents that contain indexes
-        HashMap<String, Double> scores 	= getScoreMap(docs);		// scores for each document, <Url, Score>
+        Indexador indexs 				= getIndexs(q,I);					// indice invertido aonde será feita consulta
+        List<String> docs 				= I.getDocs();					// a lista de todos os documentos
+        LinkedHashMap<String, Double> scores 	= getScoreMap(docs);	// determina o score pra cada documento, <Url, Score>
 
         N = I.getDocs().size();
         int sum = 0;
@@ -85,9 +85,9 @@ public class BM25 {
     }
 
     // extract urls from indexDocs and put into map with 0 score
-    public static HashMap<String, Double> getScoreMap(List<String> docs) {
+    public static LinkedHashMap<String, Double> getScoreMap(List<String> docs) {
 
-        HashMap<String, Double> scores = new HashMap<String, Double>();
+        LinkedHashMap<String, Double> scores = new LinkedHashMap<String, Double>();
 
         for (String doc : docs) {
             scores.put(doc, 0.0);
@@ -117,8 +117,8 @@ public class BM25 {
 
 
 
-    public static HashMap<String, Double> getTopN(int n, HashMap<String, Double> scores) {
-        HashMap<String, Double> scoresTopN = new HashMap<>();
+    public static LinkedHashMap<String, Double> getTopN(int n, LinkedHashMap<String, Double> scores) {
+        LinkedHashMap<String, Double> scoresTopN = new LinkedHashMap<>();
 
         Double max;
         String max_idx;

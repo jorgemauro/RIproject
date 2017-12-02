@@ -10,13 +10,12 @@ import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import static ferramentas.Uteis.GravaArquivo;
-import static ferramentas.Uteis.escreveFimArquivo;
-import static ferramentas.Uteis.printaTempo;
+import static ferramentas.Uteis.*;
 
 public class Indexador {
 
@@ -85,27 +84,31 @@ public class Indexador {
         this.docs= new ArrayList<>();
     }
 
-
+//Preenche o index para pesquisa
 
     private void fillIndex(String url) {
         System.out.println(this.indexador.size());
         this.frequencia.forEach((s,Integer) ->{
+            if(s.equals("BBC")){
+                System.out.println("iawshdfvb");
+            }
             HashMap<String, HashSet<Integer>> ocorrencia = new HashMap<>();
             ocorrencia=this.frequencia.get(s);
             if (!this.indexador.containsKey(s)) {
                 this.indexador.put(s, new HashMap<>());
             }
             this.indexador.get(s).putAll(ocorrencia);
-            if(memoriaInf()<80){
-                Gson gson = new Gson();
-                this.indexador.forEach((k,obj) ->{
-                    JSONObject json = new JSONObject();
-                    json.put(k,obj);
-                    escreveFimArquivo("indexador.json",json.toString());
-                });
-                this.indexador=new HashMap<>();
-            }
-        } );
+//            if(memoriaInf()<80){
+//                Gson gson = new Gson();
+//                this.indexador.forEach((k,obj) ->{
+//                    JSONObject json = new JSONObject();
+//                    json.put(k,obj);
+//                    escreveFimArquivo("indexador.json",json.toString());
+//                });
+//                this.indexador=new HashMap<>();
+//            }
+        }
+        );
     }
 
     private void fillAlfabeto(String data, String site) {
@@ -114,7 +117,7 @@ public class Indexador {
         String[] f=data.split(" ");
         this.docSize.put(site,f.length);
         for(int i=0;i<f.length;i++) {
-            if (!this.alfabeto.contains(f[i])) {
+            if (!this.alfabeto.contains(f[i])&&f[i].length() > 1) {
                 this.alfabeto.add(f[i]);
                 HashMap<String, HashSet<Integer>> ocorrencia = new HashMap<>();
                 if (!ocorrencia.containsKey(f[i]))
@@ -131,6 +134,8 @@ public class Indexador {
             }
         }
     }
+
+    // le os arquivos coletados
     public  void lerArquivosColetados() {
         File folder = new File("sites");
         File[] it = folder.listFiles();
@@ -165,28 +170,56 @@ public class Indexador {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-                if(this.count==251) {
-                    break;
-                }
-            }
-
-            if(this.count==251) {
-                break;
             }
         }
+        this.GravaIndexEAlfabeto();
     }
 
+
+    // grava o index e o Alfabeto compactados
+    private void GravaIndexEAlfabeto() {
+        JSONObject jsonAlfabeto = new JSONObject();
+        jsonAlfabeto.put("alfabeto",this.alfabeto);
+
+
+        JSONObject jsonIndexinvert = new JSONObject();
+        this.indexador.forEach((k,obj) ->{
+            jsonIndexinvert.put(k,obj);
+        });
+        JSONObject jsonDocSize = new JSONObject();
+        this.docSize.forEach((k,obj) ->{
+            jsonDocSize.put(k,obj);
+        });
+        try {
+
+            this.zipConteudo(jsonDocSize.toString(),"DocSize.zip");
+            this.zipConteudo(jsonAlfabeto.toString(),"Alfabeto.zip");
+            this.zipConteudo(jsonIndexinvert.toString(),"IndexInvertido.zip");
+            this.indexador=new HashMap<>();
+            this.alfabeto=new HashSet<>();
+            this.docSize= new HashMap<>();
+            recuperaIndexInvert(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+// Transaforma o conteudo de uma string para ser zipado
+    private void zipConteudo(String s, String nome)throws IOException {
+
+        if (s == null || s.length() == 0) {
+            System.out.println("string vazia");
+        }else {
+            GravaArquivoZip(s,nome);
+        }
+    }
+// verifica o quando tew de memoria esta sendo utilizada
     private long memoriaInf() {
         Runtime runtime = Runtime.getRuntime();
-
         NumberFormat format = NumberFormat.getInstance();
-
         StringBuilder sb = new StringBuilder();
         long maxMemory = runtime.maxMemory();
         long allocatedMemory = runtime.totalMemory();
         long freeMemory = runtime.freeMemory();
-
         sb.append("free memory: " + format.format(freeMemory / 1024) + "\n");
         sb.append("allocated memory: " + format.format(allocatedMemory / 1024) + "\n");
         sb.append("max memory: " + format.format(maxMemory / 1024) + "\n");
@@ -194,35 +227,7 @@ public class Indexador {
         long resultado=(freeMemory + (maxMemory - allocatedMemory)) / 1024;
         return resultado;
     }
-
-    public static String unzip(final byte[] compressed) {
-        if ((compressed == null) || (compressed.length == 0)) {
-            throw new IllegalArgumentException("Cannot unzip null or empty bytes");
-        }
-        if (!isZipped(compressed)) {
-            return new String(compressed);
-        }
-
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressed)) {
-            try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream)) {
-                try (InputStreamReader inputStreamReader = new InputStreamReader(gzipInputStream, StandardCharsets.UTF_8)) {
-                    try (BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
-                        StringBuilder output = new StringBuilder();
-                        String line;
-                        while((line = bufferedReader.readLine()) != null){
-                            output.append(line);
-                        }
-                        return output.toString();
-                    }
-                }
-            }
-        } catch(IOException e) {
-            throw new RuntimeException("Failed to unzip content", e);
-        }
-    }
-    public static boolean isZipped(final byte[] compressed) {
-        return (compressed[0] == (byte) (GZIPInputStream.GZIP_MAGIC)) && (compressed[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
-    }
+    // salva index em um json
     public void saveIndex(){
         JSONObject j=new JSONObject();
         this.indexador.forEach((s,h)->{

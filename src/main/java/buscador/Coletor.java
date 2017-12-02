@@ -7,11 +7,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashSet;
-import java.util.zip.GZIPOutputStream;
 
 import static ferramentas.Uteis.*;
 
@@ -36,8 +34,8 @@ public class Coletor {
         this.json= new JSONObject();
         this.limite=limite;
     }
-
-    public void pegalinkpag(String URL) {
+// Pega os link das paginas e gera os arquivos nas pastas
+    public synchronized void pegaLinkPag(String URL) {
         Document document;
         Document data;
         Elements linksOnPage;
@@ -47,26 +45,13 @@ public class Coletor {
             dest += "coletados/"+urlPrapast[2];
             Boolean urlValid= getUrlValid(URL);
             String nomeArq = getNomeArquivo(urlPrapast, "");
-            Boolean fileExists = new File(dest.toString() + "/" + nomeArq).exists();
+            String caminhoArquivo=dest + "/" + nomeArq;
+            Boolean fileExists = new File(caminhoArquivo+".html").exists();
             if (urlValid && !links.contains(URL) && count < limite) {
                 try {
                     if (!fileExists && robotSafe(new URL(URL))) {
                         //links.add(URL);
-                        if(this.count%10==0){
-                            System.out.println(this.count);
-                        }
-                        document = Jsoup.connect(URL).userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36").get();
-                        linksOnPage = document.select("a[href]");
-                        if(!fileExists){
-                            data = Jsoup.parse(document.html());
-                            GravaArquivo(data.toString(), dest, nomeArq);
-                        }
-                        for (Element page : linksOnPage) {
-                            if(!page.attr("abs:href").equals(URL)) {
-                                this.count++;
-                                pegalinkpag(page.attr("abs:href"));
-                            }
-                        }
+                        extrator(URL, dest, nomeArq);
                     }
 
                 } catch (IOException e) {
@@ -75,6 +60,28 @@ public class Coletor {
             }
         }
 
+    }
+// extrai os links da url
+    private void extrator(String URL, String dest, String nomeArq) throws IOException {
+        Document document;
+        Elements linksOnPage;
+        Document data;
+        if(this.count%10==0){
+            System.out.println(this.count);
+        }
+        document = Jsoup.connect(URL).userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36").get();
+        linksOnPage = document.select("a[href]");
+
+        data = Jsoup.parse(document.html());
+        this.count++;
+        System.out.println(nomeArq);
+        GravaArquivo(data.toString(), dest, nomeArq);
+
+        for (Element page : linksOnPage) {
+            if(!page.attr("abs:href").equals(URL)) {
+                pegaLinkPag(page.attr("abs:href"));
+            }
+        }
     }
 
 }

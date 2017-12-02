@@ -3,7 +3,10 @@ import Rank.BM25;
 import buscador.Coletor;
 import buscador.indexador.Indexador;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Scanner;
+
+import static buscador.Pesquisa.Combina;
 
 public class principal {
 
@@ -13,24 +16,27 @@ public class principal {
         String url1="https://en.wikipedia.org/wiki/Main_Page";
         String url2="https://www.uol.com.br";
         String url3="http://www.globo.com/";
-//        Coletor C= new Coletor(100);
-//        C.pegalinkpag(url3);
+        Coletor C= new Coletor(100);
+//        C.pegaLinkPag(url3);
 //        C.setCount(0);
-//        C.pegalinkpag(url2);
+//        C.pegaLinkPag(url2);
+//            C.setCount(0);
+//            C.pegaLinkPag(url1);
 //        try {
 //            Uteis.parse();
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
         Indexador I = new Indexador();
-        HashMap<String, Double> rank=new HashMap<>();
+        LinkedHashMap<String, Double> rank=new LinkedHashMap<>();
         I.lerArquivosColetados();
-        String pesquisa = "tem";
-        rank=BM25.score(pesquisa.split(" "),I);
+        Scanner s=new Scanner(System.in);
+        String pesquisa = s.nextLine();
+        rank=BM25.score(Combina(pesquisa),I);
 
-        HashMap<String, Double> encontrados =BM25.getTopN(5,rank);
+        LinkedHashMap<String, Double> encontrados =BM25.getTopN(5,rank);
 
-        System.out.println("só pra debugar");
+
 
 
     }
