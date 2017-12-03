@@ -165,6 +165,8 @@ public class Indexador {
                     this.fillIndex(arq.getName());
                     System.out.println(this.count);
                     this.count++;
+                    if(this.count==50000)
+                        break;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -172,7 +174,7 @@ public class Indexador {
                 }
             }
         }
-        this.GravaIndexEAlfabeto();
+//        this.GravaIndexEAlfabeto();
     }
 
 

@@ -2,11 +2,15 @@
 import Rank.BM25;
 import buscador.Coletor;
 import buscador.indexador.Indexador;
+import ferramentas.Uteis;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Scanner;
 
 import static buscador.Pesquisa.Combina;
+import static buscador.Pesquisa.pesquisar;
+import static ferramentas.Uteis.ImprimeEncontrados;
 
 public class principal {
 
@@ -28,17 +32,10 @@ public class principal {
 //            e.printStackTrace();
 //        }
         Indexador I = new Indexador();
-        LinkedHashMap<String, Double> rank=new LinkedHashMap<>();
         I.lerArquivosColetados();
-        Scanner s=new Scanner(System.in);
-        String pesquisa = s.nextLine();
-        rank=BM25.score(Combina(pesquisa),I);
-
-        LinkedHashMap<String, Double> encontrados =BM25.getTopN(5,rank);
-
-
-
-
+        while (true) {
+            pesquisar(I, 5);
+        }
     }
 
 

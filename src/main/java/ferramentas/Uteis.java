@@ -90,7 +90,7 @@ public class Uteis {
         return nome;
     }
     //recupera o nome das paginas para serem acessadas
-    public static String VoltaNome(String nome){
+    public static String voltaNome(String nome){
         nome=nome.replaceAll("_Ash_","#");
         nome=nome.replaceAll("_PorCent_","%");
         nome=nome.replaceAll("_Ecomerc_","&");
@@ -103,6 +103,7 @@ public class Uteis {
         nome=nome.replaceAll("_MaiorQ_",">");
         nome=nome.replaceAll("_Inter_","?");
         nome=nome.replaceAll("/","_BarraDir_");
+        nome=nome.replaceAll(".html","");
         return nome;
     }
     // verifica se a Url é valida para busca
@@ -204,7 +205,7 @@ public class Uteis {
     public static void parse() throws IOException {
         int count=0;
         String Path = "sitesextract";
-        String outputPath = "sites";
+        String outputPath = "sites/coletados";
         File folder = new File(Path);
         File[] it = folder.listFiles();
         for (File arquivo : folder.listFiles()) {
@@ -216,16 +217,6 @@ public class Uteis {
                 GZIPInputStream inputStream = new GZIPInputStream(
                         new FileInputStream(nomeCompleto));
                 count++;
-                if(count ==21) {
-                    System.out.println(count);
-
-                    Scanner in = new Scanner(inputStream);
-                    String x = "";
-                    while (in.hasNext()) {
-                        x += in.nextLine();
-                    }
-                    System.out.println("teste");
-                }
                 Document doc = Jsoup.parse(IOUtils.toString(inputStream), "", Parser.xmlParser());
                 for (Element element : doc.select("doc")) {
                     Element html = element.select("html").first();
@@ -235,7 +226,7 @@ public class Uteis {
                         html.select("a").remove();
                         String text = HtmlUtils.htmlUnescape(html.toString());
                         String[] split = element.select("docno").text().split("-");
-                        File file2 = new File(outputPath + File.separator + split[0] + File.separator + split[1]);
+                        File file2 = new File(outputPath + File.separator + split[0] + split[1]);
                         file2.mkdirs();
                         FileOutputStream fileOutputStream = new FileOutputStream(
                                 file2.getPath() + File.separator + split[2] + ".html");
@@ -371,5 +362,27 @@ public class Uteis {
                 e.printStackTrace();
             }
     }
+    }
+    public static void ImprimeEncontrados(LinkedHashMap<String, Double> encontrados) {
+        File folder = new File("sites/coletados");
+        File[] it = folder.listFiles();
+        for (File arquivo : folder.listFiles()) {
+            encontrados.forEach((s,j)->{
+                Boolean fileExists = new File("sites/coletados/"+arquivo.getName()+"/"+s).exists();
+                if(fileExists){
+                    String nomeFinal=voltaNome(s);
+                    String[] compara = arquivo.getName().split("[.]");
+                    if(compara.length>1&&compara[1].equals(nomeFinal)){
+                        nomeFinal="https://"+arquivo.getName();
+                    }else{
+                        nomeFinal="http://"+arquivo.getName()+"/"+nomeFinal;
+                    }
+                    System.out.println(nomeFinal);
+                }
+            });
+        }
+
+
+
     }
 }

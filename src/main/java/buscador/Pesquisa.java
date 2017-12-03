@@ -5,6 +5,8 @@ import buscador.indexador.Indexador;
 
 import java.util.*;
 
+import static ferramentas.Uteis.ImprimeEncontrados;
+
 public class Pesquisa {
     public static String[] Combina(String s){
         String[] t = s.toLowerCase().split("[\\p{Punct}\\s]+");
@@ -18,13 +20,16 @@ public class Pesquisa {
         arr = filtered.toArray(arr);
         return arr;
     }
-    public static void pesquisar(String pesquisa, Indexador I, int resultado){
+    public static void pesquisar(Indexador I, int resultado){
         LinkedHashMap<String, Double> rank=new LinkedHashMap<>();
-        rank= BM25.score(pesquisa.split(" "),I);
-        int NumeroDocs =3;
-        LinkedHashMap<String, Double> bestDocs=BM25.getTopN(NumeroDocs,rank);
-        String []s= new String[NumeroDocs];
-        SortedSet <Double>sorted = new TreeSet<>(bestDocs.values());
+        System.out.println("O que você deseja ´pesquisar");
+        Scanner s=new Scanner(System.in);
+        String pesquisa = s.nextLine();
+        rank=BM25.score(Combina(pesquisa),I);
+
+        LinkedHashMap<String, Double> encontrados =BM25.getTopN(resultado,rank);
+
+        ImprimeEncontrados(encontrados);
 
 
     }
